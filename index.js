@@ -51,6 +51,7 @@ const updateStatusCodeMap = {
     5000: "服务器出错",
 };
 
+// 生成请求头（Token）
 function getGeneratorHeader() {
     return {
         headers: {
@@ -59,18 +60,19 @@ function getGeneratorHeader() {
     };
 }
 
+// 请求到的 file_key
 let request_file_key = null;
 
 // 请求上传文件
 function requestUploadFile() {
     const formData = new FormData();
     const fileStream = fs.createReadStream(path.resolve(input.upload_file));
-    formData.append("file", fileStream); // 'file' 是服务器期望的字段名
+    formData.append("upload[]", fileStream);
 
     const options = {
         headers: {
             ...getGeneratorHeader().headers,
-            ...formData.getHeaders(), // 确保 multipart/form-data 的边界正确设置
+            ...formData.getHeaders(),
         },
     };
 
@@ -82,8 +84,7 @@ function requestUploadFile() {
         )
         .then((response) => {
             if (response.data.status === 2000) {
-                // 确保使用 response.data 访问返回的 JSON 数据
-                request_file_key = response.data.data[0]; // 根据实际返回的 JSON 结构调整
+                request_file_key = response.data.data[0];
                 core.setOutput("file_key", response.data.data[0]);
                 core.info(`文件上传成功, file_key: ${response.data.data[0]}`);
             } else {
