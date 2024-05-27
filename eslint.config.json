@@ -1,0 +1,42 @@
+{
+    "extends": [
+        "plugin:prettier/recommended"
+    ],
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 2021,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "import"
+    ],
+    "rules": {
+        "import/extensions": [
+            "error",
+            "always",
+            {
+                "js": "always"
+            }
+        ],
+        "no-unused-vars": "warn",
+        "no-console": "error",
+        "no-ex-assign": "error",
+        "complexity": [
+            "warn",
+            15
+        ],
+        "no-undef": "error",
+        "no-fallthrough": "error",
+        "no-shadow": "warn",
+        "no-invalid-this": "error",
+        "no-duplicate-case": "error",
+        "no-cond-assign": "error",
+        "no-const-assign": "error",
+        "no-var": "warn",
+        "for-direction": "error",
+        "no-constant-condition": "error"
+    }
+}
