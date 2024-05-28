@@ -65,13 +65,28 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v2 # 检出代码
 
-            - name: Upload to MineBBS
-              uses: engsr6982/upload-minebbs@v1 # 使用 upload-minebbs Action
+            # 简单写法
+            - name: Upload to MineBBS with upload_file
+              uses: engsr6982/upload-minebbs@v1
               with:
                   minebbs_token: ${{ secrets.MINEBBS_TOKEN }} # 使用密钥
-                  upload_file: path/to/your/file.zip # 指定上传文件的路径
                   resource_id: "12345" # 资源 ID
-                  update_title: "New Release Title" # 更新标题
-                  update_description: "Description of the new release" # 更新描述
-                  update_version: "1.0.0" # 版本号
+                  upload_file: path/to/your/file.zip # 指定上传文件的路径
+
+            # 使用外部链接
+            - name: Upload to MineBBS with use_extern_url
+              uses: engsr6982/upload-minebbs@v1
+              with:
+                  minebbs_token: ${{ secrets.MINEBBS_TOKEN }} # 使用密钥
+                  resource_id: "12345" # 资源 ID
+                  use_extern_url: true
+
+            # 自定义写法
+            - name: Upload to MineBBS with use_extern_url
+              uses: engsr6982/upload-minebbs@v1
+              with:
+                  minebbs_token: ${{ secrets.MINEBBS_TOKEN }} # 使用密钥
+                  resource_id: "12345" # 资源 ID
+                  upload_file: path/to/your/file.zip # 指定上传文件的路径
+                  update_title: "Github Actions Sync"
 ```
