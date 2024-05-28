@@ -39642,12 +39642,12 @@ function requestUpdateResource() {
     const url = `https://api.minebbs.com/api/openapi/v1/resources/${input.resource_id}/update`;
     let body = {};
 
-    const release = github.context.release;
-
-    body.title = input.update_title || release.name; // 标题（默认Release名称）
-    body.description = input.update_description || release.body; // 更新内容（默认Release内容）
+    body.title = input.update_title || github.context.payload.release.name; // 标题（默认Release名称）
+    body.description =
+        input.update_description || github.context.payload.release.body; // 更新内容（默认Release内容）
     body.new_version =
         input.update_version || github.context.payload.release.tag_name; // 新版本号（默认tag）
+
     // 根据 use_extern_url配置file_key
     body.file_key = input.use_extern_url
         ? ""
