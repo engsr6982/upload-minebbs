@@ -4,46 +4,51 @@ author: "engsr6982"
 
 # 输入内容
 inputs:
-  minebbs_token:
-    description: "MineBBS 的开发者 token"
-    required: true
-    default: ""
+    minebbs_token:
+        description: "MineBBS 的开发者 token"
+        required: true
+        default: ""
 
-  upload_file:
-    description: "需要上传的文件"
-    required: true
-    default: ""
+    resource_id:
+        description: "需要更新的资源 ID"
+        required: true
+        default: ""
 
-  resource_id:
-    description: "需要更新的资源 ID"
-    required: true
-    default: ""
+    use_extern_url:
+        description: "是否使用外部链接"
+        required: false
+        default: false
 
-  update_title:
-    description: "更新标题"
-    required: false
-    default: ""
+    custom_extern_url:
+        description: "自定义外部下载链接地址"
+        required: false
+        default: ""
 
-  update_description:
-    description: 更新描述"
-    required: false
-    default: ""
+    upload_file:
+        description: "需要上传的文件"
+        required: false
+        default: ""
 
-  update_version:
-    description: "要更新的版本号"
-    required: false
-    default: ""
+    update_title:
+        description: "更新标题"
+        required: false
+        default: ""
 
-  update_file_key:
-    description: "MineBBS 返回的 file_key，留空代表自动使用前面的file_key"
-    required: false
-    default: ""
+    update_description:
+        description: 更新描述"
+        required: false
+        default: ""
+
+    update_version:
+        description: "要更新的版本号"
+        required: false
+        default: ""
 
 # 输出内容
 outputs:
-  file_key:
-    description: "MineBBS 返回的 file_key"
+    file_key:
+        description: "MineBBS 返回的 file_key"
 
 runs:
-  using: node20
-  main: index.js
+    using: node20
+    main: index.js

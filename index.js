@@ -7,32 +7,46 @@ const path = require("path");
 const input = {
     /**
      * MineBBS 开发者 Token
+     * @type {string}
      */
     minebbs_token: core.getInput("minebbs_token", { required: true }),
     /**
-     * 要上传的文件
-     */
-    upload_file: core.getInput("upload_file", { required: true }),
-    /**
      * 资源 ID
+     * @type {number}
      */
     resource_id: core.getInput("resource_id", { required: true }),
     /**
-     * 更新标题
+     * 是否使用外部链接(默认false)
+     * @type {boolean}
      */
-    update_title: core.getInput("update_title", { required: true }),
+    use_extern_url: core.getInput("use_extern_url", { required: false }),
+    /**
+     * 自定义外部下载链接地址
+     * @type {string}
+     */
+    custom_extern_url: core.getInput("custom_extern_url", { required: false }),
+    /**
+     * 要上传的文件
+     * @type {string}
+     */
+    upload_file: core.getInput("upload_file", { required: false }),
+    /**
+     * 更新标题
+     * @type {string}
+     */
+    update_title: core.getInput("update_title", { required: false }),
     /**
      * 更新描述
+     * @type {string}
      */
-    update_description: core.getInput("update_description", { required: true }),
+    update_description: core.getInput("update_description", {
+        required: false,
+    }),
     /**
      * 更新版本
+     * @type {string}
      */
-    update_version: core.getInput("update_version", { required: true }),
-    /**
-     * 更新文件 Key
-     */
-    update_file_key: core.getInput("update_file_key", { required: false }),
+    update_version: core.getInput("update_version", { required: false }),
 };
 
 // 错误映射表
@@ -109,8 +123,15 @@ function requestUpdateResource() {
     body.description = input.update_description || release.body; // 更新内容（默认Release内容）
     body.new_version =
         input.update_version || github.context.payload.release.tag_name; // 新版本号（默认tag）
-    body.file_key = input.update_file_key || request_file_key; // 文件 Key
-    body.file_url = "";
+    // 根据 use_extern_url配置file_key
+    body.file_key = input.use_extern_url
+        ? ""
+        : input.update_file_key || request_file_key; // 文件 Key
+
+    body.file_url = input.use_extern_url
+        ? input.custom_extern_url ||
+          `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases`
+        : "";
 
     axios
         .post(url, body, getGeneratorHeader())
@@ -140,16 +161,20 @@ function main() {
         core.setFailed("请提供 MineBBS 开发者 Token!");
         return;
     }
-    if (!fs.existsSync(path.resolve(input.upload_file))) {
-        core.setFailed("文件不存在, 请检查 upload_file!");
-        return;
-    }
     if (input.resource_id == "" || input.resource_id == null) {
         core.setFailed("请提供资源 ID!");
         return;
     }
     // 开始请求
-    requestUploadFile();
+    if (!input.use_extern_url) {
+        // 不使用外部链接，则上传文件
+        if (!fs.existsSync(path.resolve(input.upload_file))) {
+            // 检查文件是否存在
+            core.setFailed("文件不存在, 请检查 upload_file!");
+            return;
+        }
+        requestUploadFile(); // 开始上传
+    }
     requestUpdateResource();
 }
 

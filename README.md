@@ -6,15 +6,42 @@
 
 输入参数：
 
-| 参数名               | 描述                                              | 是否必须 | 默认值 |
-| -------------------- | ------------------------------------------------- | -------- | ------ |
-| `minebbs_token`      | MineBBS 的开发者 token                            | 是       | 空     |
-| `upload_file`        | 需要上传的文件                                    | 是       | 空     |
-| `resource_id`        | 需要更新的资源 ID                                 | 是       | 空     |
-| `update_title`       | 更新标题(留空默认使用Release标题)                 | 否       | 空     |
-| `update_description` | 更新描述(留空默认使用Release内容)                 | 否       | 空     |
-| `update_version`     | 要更新的版本号(留空默认使用Tag)                   | 否       | 空     |
-| `update_file_key`    | MineBBS 返回的 file_key(不用设置这个，无实际作用) | 否       | 空     |
+| 参数名               | 描述                                               | 是否必须 | 默认值 |
+| -------------------- | -------------------------------------------------- | -------- | ------ |
+| `minebbs_token`      | MineBBS 的开发者 token                             | 是       | 空     |
+| `resource_id`        | 需要更新的资源 ID                                  | 是       | 空     |
+| `use_extern_url`     | 是否使用外部链接                                   | 否       | false  |
+| `custom_extern_url`  | 自定义外部下载链接地址(留空使用GitHub release地址) | 否       | 空     |
+| `upload_file`        | 需要上传的文件                                     | 否       | 空     |
+| `update_title`       | 更新标题(留空默认使用Release标题)                  | 否       | 空     |
+| `update_description` | 更新描述(留空默认使用Release内容)                  | 否       | 空     |
+| `update_version`     | 要更新的版本号(留空默认使用Tag)                    | 否       | 空     |
+
+> [!warning]
+>
+> `use_extern_url` 和 `upload_file` 必须选择一个作为更新方式，否则更新失败  
+> `upload_file` 提供的文件不能大于`10Mb`（API接口限制）
+
+| API 允许上传的文件扩展名 |
+| ------------------------ |
+| .zip                     |
+| .7z                      |
+| rar                      |
+| .tar                     |
+| .pdf                     |
+| .psd                     |
+| .phar                    |
+| .mcpack                  |
+| .mcworld                 |
+| .mcaddon                 |
+| .jar                     |
+| .apk                     |
+| .exe                     |
+| .js                      |
+| .json                    |
+| .dll                     |
+| .py                      |
+| .bnpx                    |
 
 ## 输出参数
 
