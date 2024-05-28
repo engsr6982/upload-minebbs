@@ -51,4 +51,4 @@ outputs:
 
 runs:
     using: node20
-    main: index.js
+    main: dist/index.js

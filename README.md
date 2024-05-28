@@ -90,3 +90,13 @@ jobs:
                   upload_file: path/to/your/file.zip # 指定上传文件的路径
                   update_title: "Github Actions Sync"
 ```
+
+## 开发
+
+-   更改 index.js 后，执行以下命令进行编译
+
+```bash
+npm i -g @vercel/ncc
+
+ncc build index.js --license licenses.txt
+```
