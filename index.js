@@ -1,8 +1,9 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
+import core from "@actions/core";
+import github from "@actions/github";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import FormData from "form-data";
 
 const input = {
     /**
