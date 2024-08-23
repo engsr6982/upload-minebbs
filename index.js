@@ -229,12 +229,12 @@ class UploadMineBBS {
             }
 
             await this.RequestUploadFile().catch((e) => {
-                core.setFailed(`Fail in RequestUploadFile, exception: ${e``}`);
+                core.setFailed(`Fail in RequestUploadFile, exception: ${e}`);
             }); // 开始上传
         }
 
         await this.RequestUpdateResource().catch((e) => {
-            core.setFailed(`Fail in RequestUpdateResource, exception: ${e``}`);
+            core.setFailed(`Fail in RequestUpdateResource, exception: ${e}`);
         });
 
         core.info(`文件上传成功`);
