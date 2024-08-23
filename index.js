@@ -114,7 +114,6 @@ class UploadMineBBS {
         5000: "服务器出错",
     };
     UpdateStatusCodeMap = {
-        400: "Token 已过期",
         2000: "成功",
         4000: "请提交正确的资源ID/无法解析Json/请提交正确的文件key",
         4030: "没有操作指定资源的权限",
@@ -155,7 +154,8 @@ class UploadMineBBS {
             options,
         );
 
-        if (response.data.status === 2000) {
+        const status = response.data.status;
+        if (status === 2000) {
             this.FileKey = response.data.data[0];
             core.debug(`FileKey: ${response.data.data[0]}`);
         } else {
@@ -166,7 +166,7 @@ class UploadMineBBS {
             );
             return;
         }
-        core.info(`上传文件成功`);
+        core.info(`上传文件成功: ${status} => ${this.UploadStatusCodeMap[status]}`);
     }
 
     async RequestUpdateResource() {
@@ -193,7 +193,8 @@ class UploadMineBBS {
             this.GeneratorRequestHeader(),
         );
 
-        if (response.data.status !== 2000) {
+        const status = response.data.status;
+        if (status !== 2000) {
             core.setFailed(
                 `更新资源失败，状态码: ${response.data.status} => ${
                     this.UpdateStatusCodeMap[response.data.status]
@@ -201,7 +202,7 @@ class UploadMineBBS {
             );
             return;
         }
-        core.info(`请求更新资源成功`);
+        core.info(`请求更新资源成功: ${status} => ${this.UpdateStatusCodeMap[status]}`);
     }
 
     CheckInput() {
@@ -229,15 +230,19 @@ class UploadMineBBS {
             }
 
             await this.RequestUploadFile().catch((e) => {
+                if (/400$/.test(e)) {
+                    core.error("Token 已过期");
+                }
                 core.setFailed(`Fail in RequestUploadFile, exception: ${e}`);
             }); // 开始上传
         }
 
         await this.RequestUpdateResource().catch((e) => {
+            if (/400$/.test(e)) {
+                core.error("Token 已过期");
+            }
             core.setFailed(`Fail in RequestUpdateResource, exception: ${e}`);
         });
-
-        core.info(`文件上传成功`);
     }
 
     constructor() {}
