@@ -175,8 +175,8 @@ class UploadMineBBS {
             title: Input.GetUpdateTitle(),
             description: Input.GetUpdateDescription(),
             new_version: Input.GetUpdateVersion(),
-            file_key: null,
-            file_url: null,
+            // file_key: null,
+            // file_url: null,
         };
 
         if (this.FileKey || Input.IsUseExternURL()) {
