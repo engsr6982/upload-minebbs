@@ -39530,179 +39530,244 @@ var github = __nccwpck_require__(8104);
 
 
 
-const input = {
+class Input {
     /**
-     * MineBBS 开发者 Token
-     * @type {string}
+     * 获取 MineBBS Token
+     * @returns {string}
      */
-    minebbs_token: core.getInput("minebbs_token", { required: true }),
-    /**
-     * 资源 ID
-     * @type {number}
-     */
-    resource_id: core.getInput("resource_id", { required: true }),
-    /**
-     * 是否使用外部链接(默认false)
-     * @type {boolean}
-     */
-    use_extern_url: core.getInput("use_extern_url", { required: false }),
-    /**
-     * 自定义外部下载链接地址
-     * @type {string}
-     */
-    custom_extern_url: core.getInput("custom_extern_url", { required: false }),
-    /**
-     * 要上传的文件
-     * @type {string}
-     */
-    upload_file: core.getInput("upload_file", { required: false }),
-    /**
-     * 更新标题
-     * @type {string}
-     */
-    update_title: core.getInput("update_title", { required: false }),
-    /**
-     * 更新描述
-     * @type {string}
-     */
-    update_description: core.getInput("update_description", {
-        required: false,
-    }),
-    /**
-     * 更新版本
-     * @type {string}
-     */
-    update_version: core.getInput("update_version", { required: false }),
-};
+    static GetToken() {
+        return core.getInput("minebbs_token", { required: true });
+    }
 
-// 错误映射表
-const uploadStatusCodeMap = {
-    2000: "成功",
-    4002: "没有上传文件",
-    4003: "上传文件数量超过限制",
-    4004: "上传的文件类型不被允许",
-    4005: "上传的文件大小超过限制",
-    5000: "服务器出错",
-};
-const updateStatusCodeMap = {
-    2000: "成功",
-    4000: "请提交正确的资源ID/无法解析Json/请提交正确的文件key",
-    4030: "没有操作指定资源的权限",
-    5000: "服务器出错",
-};
+    /**
+     * 获取资源ID
+     * @returns {string}
+     */
+    static GetResourceID() {
+        const id = core.getInput("resource_id", { required: true });
+        core.debug(`resource_id: ${id}`);
+        return id;
+    }
 
-// 生成请求头（Token）
-function getGeneratorHeader() {
-    return {
-        headers: {
-            Authorization: "Bearer " + input.minebbs_token,
-        },
-    };
+    /**
+     * @returns {boolean}
+     */
+    static IsUseExternURL() {
+        const bool = core.getInput("use_extern_url", { required: false });
+        core.debug(`use_extern_url: ${bool}`);
+        return Object.prototype.toString.call(bool) === "[object Boolean]"
+            ? bool
+            : bool == "true"
+              ? true
+              : false;
+    }
+
+    /**
+     * @returns {string | null}
+     */
+    static GetCustomExternURL() {
+        const url = core.getInput("custom_extern_url", { required: false });
+        core.debug(`custom_extern_url: ${url}`);
+        if (url == "" || url == null) {
+            return null;
+        } else {
+            return url;
+        }
+    }
+
+    /**
+     * @returns {string | null}
+     */
+    static GetUploadFile() {
+        const file = core.getInput("upload_file", { required: false });
+        core.debug(`upload_file: ${file}`);
+        if (file == "" || file == null) {
+            return null;
+        } else {
+            return file;
+        }
+    }
+
+    /**
+     * @returns {string}
+     */
+    static GetUpdateTitle() {
+        const data = core.getInput("update_title", { required: false });
+        core.debug(`update_title: ${data}`);
+        if (data == "" || data == null) {
+            return github.context.payload.release.name;
+        } else {
+            return data;
+        }
+    }
+
+    /**
+     * @returns {string}
+     */
+    static GetUpdateDescription() {
+        const data = core.getInput("update_description", { required: false });
+        core.debug(`update_description: ${data}`);
+        if (data == "" || data == null) {
+            return github.context.payload.release.body;
+        } else {
+            return data;
+        }
+    }
+
+    /**
+     * @returns {string}
+     */
+    static GetUpdateVersion() {
+        const v = core.getInput("update_version", { required: false });
+        core.debug(`update_version: ${v}`);
+        if (v == "" || v == null) {
+            return github.context.payload.release.tag_name;
+        } else {
+            return v;
+        }
+    }
 }
 
-// 请求到的 file_key
-let request_file_key = null;
-
-// 请求上传文件
-function requestUploadFile() {
-    const formData = new form_data();
-    const fileStream = external_fs_.createReadStream(external_path_.resolve(input.upload_file));
-    formData.append("upload[]", fileStream);
-
-    const options = {
-        headers: {
-            ...getGeneratorHeader().headers,
-            ...formData.getHeaders(),
-        },
+class UploadMineBBS {
+    UploadStatusCodeMap = {
+        2000: "成功",
+        4002: "没有上传文件",
+        4003: "上传文件数量超过限制",
+        4004: "上传的文件类型不被允许",
+        4005: "上传的文件大小超过限制",
+        5000: "服务器出错",
+    };
+    UpdateStatusCodeMap = {
+        400: "Token 已过期",
+        2000: "成功",
+        4000: "请提交正确的资源ID/无法解析Json/请提交正确的文件key",
+        4030: "没有操作指定资源的权限",
+        5000: "服务器出错",
     };
 
-    lib_axios.post(
+    /** @type {string} */ FileKey = undefined;
+
+    GeneratorRequestHeader() {
+        return {
+            headers: {
+                Authorization: `Bearer ${Input.GetToken()}`,
+            },
+        };
+    }
+
+    GeneratorRepoURL() {
+        return `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases`;
+    }
+
+    async RequestUploadFile() {
+        const formData = new form_data();
+        const fileStream = external_fs_.createReadStream(
+            external_path_.resolve(Input.GetUploadFile()),
+        );
+        formData.append("upload[]", fileStream); // 上传文件
+
+        const options = {
+            headers: {
+                ...this.GeneratorRequestHeader().headers, // 展开请求头
+                ...formData.getHeaders(), // 展开文件上传请求头
+            },
+        };
+
+        const response = await lib_axios.post(
             "https://api.minebbs.com/api/openapi/v1/upload/",
             formData,
             options,
-        )
-        .then((response) => {
-            if (response.data.status === 2000) {
-                request_file_key = response.data.data[0];
-                core.setOutput("file_key", response.data.data[0]);
-                core.info(`文件上传成功, file_key: ${response.data.data[0]}`);
-            } else {
-                core.setFailed(
-                    `上传文件失败, 错误原因: ${uploadStatusCodeMap[response.data.status]}`,
-                );
-            }
-        })
-        .catch((error) => {
-            core.setFailed("请求上传文件失败，失败原因: " + error.message);
-        });
-}
+        );
 
-// 请求更新资源
-function requestUpdateResource() {
-    const url = `https://api.minebbs.com/api/openapi/v1/resources/${input.resource_id}/update`;
-    let body = {};
-
-    body.title = input.update_title || github.context.payload.release.name; // 标题（默认Release名称）
-    body.description =
-        input.update_description || github.context.payload.release.body; // 更新内容（默认Release内容）
-    body.new_version =
-        input.update_version || github.context.payload.release.tag_name; // 新版本号（默认tag）
-
-    // 根据 use_extern_url配置file_key
-    body.file_key = input.use_extern_url
-        ? ""
-        : input.update_file_key || request_file_key; // 文件 Key
-
-    body.file_url = input.use_extern_url
-        ? input.custom_extern_url ||
-          `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases`
-        : "";
-
-    lib_axios.post(url, body, getGeneratorHeader())
-        .then((res) => {
-            if (!res.data.status === 2000) {
-                core.setFailed(
-                    `请求更新资源失败，原因：${updateStatusCodeMap[res.data.status]}`,
-                );
-            }
-        })
-        .catch((e) => {
-            core.setFailed("请求更新资源失败，失败原因: " + e.message);
-        });
-}
-
-// 主函数
-function main() {
-    // 调试，打印信息
-    core.debug(`upload_file: ${input.upload_file}`);
-    core.debug(`resource_id: ${input.resource_id}`);
-    core.debug(`update_title: ${input.update_title}`);
-    core.debug(`update_description: ${input.update_description}`);
-    core.debug(`update_version: ${input.update_version}`);
-    core.debug(`update_file_key: ${input.update_file_key}`);
-    // 检查输入数据
-    if (input.minebbs_token == "" || input.minebbs_token == null) {
-        core.setFailed("请提供 MineBBS 开发者 Token!");
-        return;
-    }
-    if (input.resource_id == "" || input.resource_id == null) {
-        core.setFailed("请提供资源 ID!");
-        return;
-    }
-    // 开始请求
-    if (!input.use_extern_url) {
-        // 不使用外部链接，则上传文件
-        if (!external_fs_.existsSync(external_path_.resolve(input.upload_file))) {
-            // 检查文件是否存在
-            core.setFailed("文件不存在, 请检查 upload_file!");
+        if (response.data.status === 2000) {
+            this.FileKey = response.data.data[0];
+            core.debug(`FileKey: ${response.data.data[0]}`);
+        } else {
+            core.setFailed(
+                `上传文件失败，状态码: ${response.data.status} => ${
+                    this.UploadStatusCodeMap[response.data.status]
+                }`,
+            );
             return;
         }
-        requestUploadFile(); // 开始上传
+        core.info(`上传文件成功`);
     }
-    requestUpdateResource();
+
+    async RequestUpdateResource() {
+        const url = `https://api.minebbs.com/api/openapi/v1/resources/${Input.GetResourceID()}/update`;
+        const body = {
+            title: Input.GetUpdateTitle(),
+            description: Input.GetUpdateDescription(),
+            new_version: Input.GetUpdateVersion(),
+            file_key: null,
+            file_url: null,
+        };
+
+        if (this.FileKey || Input.IsUseExternURL()) {
+            const url = Input.GetCustomExternURL();
+            body.file_url = url ? url : this.GeneratorRepoURL();
+        } else {
+            body.file_key = this.FileKey;
+        }
+
+        // 发送请求
+        const response = await lib_axios.post(
+            url,
+            body,
+            this.GeneratorRequestHeader(),
+        );
+
+        if (response.data.status !== 2000) {
+            core.setFailed(
+                `更新资源失败，状态码: ${response.data.status} => ${
+                    this.UpdateStatusCodeMap[response.data.status]
+                }`,
+            );
+            return;
+        }
+        core.info(`请求更新资源成功`);
+    }
+
+    CheckInput() {
+        const Token = Input.GetToken();
+        if (Token == "" || Token == null) {
+            core.setFailed("请提供 MineBBS 开发者 Token!");
+            return false;
+        }
+        const ResourceID = Input.GetResourceID();
+        if (ResourceID == "" || ResourceID == null) {
+            core.setFailed("请提供资源 ID!");
+            return false;
+        }
+        return true;
+    }
+
+    async Run() {
+        if (!this.CheckInput()) return;
+
+        if (!Input.IsUseExternURL()) {
+            if (!external_fs_.existsSync(external_path_.resolve(Input.GetUploadFile()))) {
+                // 检查文件是否存在
+                core.setFailed("文件不存在, 请检查 upload_file!");
+                return;
+            }
+
+            await this.RequestUploadFile().catch((e) => {
+                core.setFailed(`Fail in RequestUploadFile, exception: ${e``}`);
+            }); // 开始上传
+        }
+
+        await this.RequestUpdateResource().catch((e) => {
+            core.setFailed(`Fail in RequestUpdateResource, exception: ${e``}`);
+        });
+
+        core.info(`文件上传成功`);
+    }
+
+    constructor() {}
 }
 
-main();
+new UploadMineBBS().Run();
 
 })();
 
